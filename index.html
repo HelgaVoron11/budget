@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Контроль бюджета</title>
+<meta name="theme-color" content="#6c5ce7">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f4f5fb;--card:#fff;--text:#1d2033;--muted:#7a7f99;--line:#e3e6f2;--acc:#6c5ce7;--acc2:#a29bfe;--ok:#00b894;--bad:#e8505b;--warn:#f0a500;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14151f;--card:#1e2030;--text:#eceefb;--muted:#9096b5;--line:#2d3047;--acc:#8a7dff;--acc2:#5b4fd0;--ok:#2ed3a8;--bad:#ff6b76;--warn:#ffc233;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14151f;--card:#1e2030;--text:#eceefb;--muted:#9096b5;--line:#2d3047;--acc:#8a7dff;--acc2:#5b4fd0;--ok:#2ed3a8;--bad:#ff6b76;--warn:#ffc233;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding:16px}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:24px;margin:4px 0 16px}
+.card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 2px 12px rgba(40,40,90,.07);margin-bottom:14px}
+.setup{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+input{font:inherit;color:var(--text);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;width:100%;outline:none}
+input:focus{border-color:var(--acc)}
+.f1{flex:2 1 180px}.f2{flex:1 1 90px}.f3{flex:0 1 80px}
+button{font:inherit;border:0;border-radius:10px;padding:10px 14px;background:var(--bg);color:var(--muted);cursor:pointer}
+button:hover{color:var(--bad)}
+.hero{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+.ring{position:relative;width:170px;height:170px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ring b{font-size:22px}.ring span{font-size:12px;color:var(--muted)}
+.stats{flex:1 1 260px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.st{background:var(--bg);border-radius:12px;padding:12px}
+.st small{color:var(--muted);font-size:12px;display:block}.st strong{font-size:18px}
+.chart{display:flex;gap:4px;height:150px;align-items:flex-end}
+.col{flex:1;height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.bars{position:relative;width:100%;flex:1}
+.bars i{position:absolute;bottom:0;border-radius:5px 5px 0 0;transition:height .35s}
+.bars .l{left:0;right:0;background:var(--line)}
+.bars .s{left:22%;right:22%;background:linear-gradient(var(--acc),var(--acc2))}
+.bars .s.over{background:var(--bad)}
+.col em{font-style:normal;font-size:10px;color:var(--muted);margin-top:4px}
+.legend{font-size:12px;color:var(--muted);margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.day{background:var(--card);border-radius:14px;padding:12px;border:1.5px solid transparent;box-shadow:0 2px 10px rgba(40,40,90,.06)}
+.day.cur{border-color:var(--acc)}
+.day h3{margin:0 0 2px;font-size:14px;display:flex;justify-content:space-between}
+.day .lim{font-size:12px;color:var(--muted);margin-bottom:8px}
+.day .bal{font-size:13px;margin-top:8px;font-weight:600;color:var(--muted)}
+.bal.ok{color:var(--ok)}.bal.bad{color:var(--bad)}
+.prog{height:5px;background:var(--line);border-radius:5px;margin-top:6px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.hint{font-size:12px;color:var(--muted);margin:2px 2px 14px}
+.day .inc{margin-top:6px;padding:6px 9px;font-size:13px;border-style:dashed}
+.tot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin:2px 0 4px}.tot b{color:var(--text);font-size:14px}.tot u{text-decoration:none;cursor:pointer;padding:0 4px;font-size:15px}.tot u:hover{color:var(--bad)}.tot.inn{margin-top:8px}.tot.inn b{color:var(--ok)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>💰 Контроль бюджета</h1>
+<div class="card setup">
+ <div class="f1"><label>Общая сумма</label><input id="total" type="number" inputmode="decimal" min="0" placeholder="например, 30000"></div>
+ <div class="f2"><label>Начало</label><input id="start" type="date"></div>
+ <div class="f2"><label>Конец</label><input id="end" type="date"></div>
+ <div class="f3"><label>Дней</label><div id="nd" style="padding:9px 0;font-weight:700"></div></div>
+ <div class="f3"><label>Валюта</label><input id="cur" value="₽" maxlength="4"></div>
+ <button id="reset">Сбросить траты</button>
+</div>
+<div class="card hero">
+ <div class="ring"><svg width="170" height="170" viewBox="0 0 170 170"><circle cx="85" cy="85" r="70" fill="none" stroke="var(--line)" stroke-width="16"/><circle id="arc" cx="85" cy="85" r="70" fill="none" stroke="var(--acc)" stroke-width="16" stroke-linecap="round" stroke-dasharray="440" stroke-dashoffset="440" style="transition:stroke-dashoffset .5s,stroke .3s"/></svg>
+ <div class="c"><b id="rem">—</b><span>осталось</span></div></div>
+ <div class="stats">
+  <div class="st"><small>Потрачено</small><strong id="spent">0</strong></div>
+  <div class="st"><small>Лимит на ближайший день</small><strong id="next">—</strong></div>
+  <div class="st"><small>Дней осталось</small><strong id="left">—</strong></div>
+  <div class="st"><small>Внеплановый приход</small><strong id="diff">—</strong></div>
+ </div>
+</div>
+<div class="card"><div class="chart" id="chart"></div><div class="legend">Серый столбец — лимит дня, цветной — фактическая трата (красный — перерасход)</div></div>
+<div class="hint">Впишите сумму в поле дня и нажмите Enter: поле очистится, а сумма добавится к итогу «Потрачено» (↶ удаляет последнюю запись). Можно вводить сразу несколько через плюс: <b>250+120</b>. Неизрасходованный остаток (или перерасход) автоматически перераспределяется на следующие дни. В поле «+ приход» вносите внеплановые поступления — они увеличивают лимиты с этого дня и до конца периода.</div>
+<div class="grid" id="grid"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let S={total:'',days:15,cur:'₽',sp:[],inc:[],start:'',end:''};
+try{const r=localStorage.getItem('budget15');if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem('budget15',JSON.stringify(S))}catch(e){}};
+const num=s=>String(s||'').replace(/,/g,'.').split('+').reduce((a,x)=>a+(parseFloat(x)||0),0);
+const fmt=n=>Math.round(n).toLocaleString('ru-RU').replace(/\s/g,'\u202f');
+const money=n=>(n<0?'−':'')+fmt(Math.abs(n))+'\u00a0'+S.cur;
+function build(){
+ const g=$('grid');g.innerHTML='';
+ for(let i=0;i<S.days;i++){
+  const d=document.createElement('div');d.className='day';d.id='d'+i;
+  d.innerHTML=`<h3><span>${dl(i)}</span><span id="p${i}"></span></h3><div class="lim" id="l${i}"></div><div class="tot"><span>Потрачено: <b id="t${i}">0</b></span><u data-u="sp" data-i="${i}" title="Удалить последнюю запись">↶</u></div><input data-i="${i}" data-k="sp" inputmode="decimal" placeholder="+ трата"><div class="tot inn"><span>Приход: <b id="n${i}">0</b></span><u data-u="inc" data-i="${i}" title="Удалить последнюю запись">↶</u></div><input class="inc" data-i="${i}" data-k="inc" inputmode="decimal" placeholder="+ приход"><div class="prog"><i id="g${i}"></i></div><div class="bal" id="b${i}"></div>`;
+  g.appendChild(d);
+ }
+ g.onchange=e=>{const i=e.target.dataset.i,k=e.target.dataset.k;if(i===undefined||!k)return;const v=Math.round(num(e.target.value)*100)/100;e.target.value='';if(!v)return;const a=k==='inc'?S.inc:S.sp;a[i]=(a[i]?a[i]+'+':'')+v;save();update()};
+ g.onclick=e=>{const u=e.target.dataset.u;if(!u)return;const i=e.target.dataset.i,a=u==='inc'?S.inc:S.sp,t=String(a[i]||'').split('+');t.pop();a[i]=t.join('+');save();update()};
+}
+function update(){
+ const N=S.days,T=parseFloat(S.total)||0;
+ let used=0,incSum=0,lims=[],sps=[],firstEmpty=-1;
+ for(let i=0;i<N;i++){
+  incSum+=num(S.inc[i]);
+  lims[i]=(T+incSum-used)/(N-i);
+  const raw=String(S.sp[i]||'').trim();
+  sps[i]=num(raw);
+  if(raw===''&&firstEmpty<0)firstEmpty=i;
+  used+=sps[i];
+ }
+ const TT=T+incSum,rem=TT-used,frac=TT>0?Math.max(0,Math.min(1,rem/TT)):0;
+ $('rem').textContent=TT?money(rem):'—';
+ $('spent').textContent=money(used);
+ const arc=$('arc');arc.style.strokeDashoffset=440*(1-frac);
+ arc.style.stroke=rem<0?'var(--bad)':frac<.2?'var(--warn)':'var(--acc)';
+ $('next').textContent=firstEmpty>=0&&T?money(lims[firstEmpty]):'—';
+ $('left').textContent=firstEmpty>=0?(N-firstEmpty)+' из '+N:'0 из '+N;
+ $('diff').textContent=incSum?'+'+money(incSum):'—';
+ $('diff').style.color='var(--ok)';
+ const mx=Math.max(1,...lims,...sps);
+ $('chart').innerHTML=lims.map((l,i)=>`<div class="col"><div class="bars"><i class="l" style="height:${l/mx*100}%"></i><i class="s${sps[i]>l+.5?' over':''}" style="height:${sps[i]/mx*100}%"></i></div><em>${i+1}</em></div>`).join('');
+ for(let i=0;i<N;i++){
+  const filled=String(S.sp[i]||'').trim()!=='';
+  $('t'+i).textContent=money(sps[i]);$('n'+i).textContent=money(num(S.inc[i]));
+  $('d'+i).classList.toggle('cur',i===firstEmpty);
+  $('l'+i).textContent='Лимит: '+(T?money(lims[i]):'—');
+  const b=$('b'+i),p=lims[i]>0?sps[i]/lims[i]:0;
+  if(filled&&T){const r=lims[i]-sps[i];b.textContent=(r>=0?'Остаток: ':'Перерасход: ')+money(Math.abs(r));b.className='bal '+(r>=0?'ok':'bad')}
+  else{b.textContent=T?'Доступно: '+money(lims[i]):'';b.className='bal'}
+  const g=$('g'+i);g.style.width=Math.min(100,p*100)+'%';g.style.background=p>1?'var(--bad)':p>.85?'var(--warn)':'var(--ok)';
+  $('p'+i).textContent=filled&&T?Math.round(p*100)+'%':'';
+ }
+}
+function iso(d){const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)}
+function calc(){const n=Math.round((new Date(S.end+'T00:00')-new Date(S.start+'T00:00'))/864e5)+1;S.days=isNaN(n)?1:Math.max(1,Math.min(366,n));$('nd').textContent=S.days}
+function dl(i){const d=new Date(S.start+'T00:00');d.setDate(d.getDate()+i);return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}
+if(!S.start){const t=new Date();S.start=iso(t);t.setDate(t.getDate()+14);S.end=iso(t)}
+$('total').value=S.total;$('start').value=S.start;$('end').value=S.end;$('cur').value=S.cur;calc();
+$('total').oninput=e=>{S.total=e.target.value;save();update()};
+$('cur').oninput=e=>{S.cur=e.target.value;save();update()};
+$('start').onchange=$('end').onchange=()=>{S.start=$('start').value||S.start;S.end=$('end').value||S.end;if(S.end<S.start){S.end=S.start;$('end').value=S.end}calc();save();build();update()};
+$('reset').onclick=()=>{if(confirm('Очистить все введённые траты?')){S.sp=[];S.inc=[];save();build();update()}};
+build();update();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
